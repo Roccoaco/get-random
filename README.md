@@ -3,7 +3,6 @@
 **A non-linear compass for your week.** Get Random gives you one small, novel thing to do each day, balanced across ten domains of a rich life (Senses, Explore, Learn, Create, Connect, Move, Reflect, Give, Awe, Play). It draws on motivation science and cognitive psychology. A Curioster project. *Have fun, be yourself and enjoy.*
 
 - **Open the app:** https://roccoaco.github.io/get-random/
-- **Brand book:** https://roccoaco.github.io/get-random/brand/
 
 Available in English, Italiano, Français, Español, Deutsch and Dansk. Use the globe menu in the header to switch.
 
