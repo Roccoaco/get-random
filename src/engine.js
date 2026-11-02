@@ -146,7 +146,38 @@ function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
 
 /* ================= services (Commons + Claude) ================= */
 let db=null,me=null,sample=null;
+const REPO='Roccoaco/get-random';
+const HOSTED=!window.claude; /* true outside claude.ai, e.g. on GitHub Pages */
+/* ---- bring-your-own-key Claude (hosted mode) ---- */
+const CKEY='getrandom.claude';
+const CL_MODELS=[['claude-haiku-5-5','Haiku 5.5'],['claude-sonnet-5-5','Sonnet 5.5'],['claude-opus-5-5','Opus 5.5']];
+function byok(key,model){
+  const call=async prompt=>{let r;try{r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:1200,messages:[{role:'user',content:prompt}]})})}catch(e){throw {code:'network'}}
+    if(r.status===401||r.status===403)throw {code:'bad_key'};if(r.status===429||r.status===529)throw {code:'rate_limited'};if(!r.ok)throw {code:'failed',status:r.status};
+    const j=await r.json();return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('')};
+  const s=async p=>({text:await call(typeof p==='string'?p:String(p)),truncated:false});
+  s.json=async p=>{const txt=await call(p+'\nReturn only the JSON object: no prose, no code fences.');const m=txt.match(/\{[\s\S]*\}/);if(!m)throw {code:'invalid_json'};try{return JSON.parse(m[0])}catch(e){throw {code:'invalid_json'}}};
+  s.model=model;return s}
+function loadByok(){try{const c=JSON.parse(localStorage.getItem(CKEY)||'null');if(c&&c.key)return byok(c.key,c.model||CL_MODELS[0][0])}catch(e){}return null}
+/* ---- GitHub-issues Commons (hosted mode) ---- */
+let GH={state:'idle',items:[],at:0};
+async function loadGH(force){
+  if(GH.state==='loading')return;
+  if(!force){try{const c=JSON.parse(sessionStorage.getItem('gr.gh')||'null');if(c&&Date.now()-c.at<300000){GH.items=c.items;GH.at=c.at;GH.state='ok';return}}catch(e){}}
+  GH.state='loading';if(view==='commons')render();
+  try{const r=await fetch('https://api.github.com/repos/'+REPO+'/issues?state=open&per_page=60&sort=created&direction=desc',{headers:{Accept:'application/vnd.github+json'}});
+    if(!r.ok)throw new Error(String(r.status));const js=await r.json();
+    GH.items=(Array.isArray(js)?js:[]).filter(i=>i&&!i.pull_request).map(i=>{const body=String(i.body||'');const code=(body.match(/GR[12]\.[A-Za-z0-9+/=]+/)||[])[0];if(!code)return null;const nm=body.match(/<!--\s*note\s*-->([\s\S]*?)<!--\s*\/note\s*-->/);
+      return {id:String(i.number),url:String(i.html_url||''),login:i.user&&i.user.login?String(i.user.login):'',likes:(i.reactions&&+i.reactions['+1'])||0,code,note:nm?nm[1].trim().slice(0,280):''}}).filter(Boolean);
+    GH.state='ok';GH.at=Date.now();try{sessionStorage.setItem('gr.gh',JSON.stringify({at:GH.at,items:GH.items}))}catch(e){}
+  }catch(e){GH.state='err'}
+  if(view==='commons')render()}
+function ghIssueURL(w,note){
+  const lines=w.days.map((d,i)=>'- **'+DayC(i)+':** '+(d.map(e=>{const x=evText(e);return x.title+(x.twist?' ('+x.twist+')':'')}).join(' + ')||t('free_word')));
+  const body='<!-- note -->\n'+(note||'').replace(/<!--|-->/g,'')+'\n<!-- /note -->\n\n'+lines.join('\n')+'\n\n`'+encodeWeek(w)+'`\n\n<sub>'+t('made_with')+'</sub>';
+  return 'https://github.com/'+REPO+'/issues/new?template=week.md&labels=week&title='+encodeURIComponent('[Week] '+weekName(w))+'&body='+encodeURIComponent(body)}
 async function connectServices(){
+  if(HOSTED){sample=loadByok();if(sample)render();return}
   try{const [d,u]=await Promise.all([window.claude?claude.use('db'):null,window.claude?claude.use('user'):null]);
     if(d&&u){const id=await u.id();if(id){db=d;me=id;if(view==='commons'){subscribeCommons();render()}else if(view==='toolbox')render()}}}catch(e){}
   try{sample=window.claude?await claude.use('sample'):null}catch(e){sample=null}if(sample)render()}
@@ -194,7 +225,7 @@ Reply with JSON only, shaped exactly: {"title": "imperative sentence, max 110 ch
   const r=await sample.json(prompt,{cache:false});
   if(!r||typeof r.title!=='string')throw {code:'invalid_json'};
   return {id:uid(),title:String(r.title).slice(0,160),domain,min:Math.max(0,Math.min(240,parseInt(r.minutes)||p.time)),twist:r.twist?String(r.twist).slice(0,90):null,cue:r.cue?String(r.cue).slice(0,60):null,why:r.why?String(r.why).slice(0,240):null,src:'claude'}}
-function claudeErr(e){if(e&&e.code==='rate_limited')toast(t('cl_rate'));else if(e&&e.code==='not_granted'){sample=null;render();toast(t('cl_off'))}else toast(t('cl_fail'))}
+function claudeErr(e){if(e&&e.code==='bad_key'){toast(t('cl_badkey'));return}if(e&&e.code==='rate_limited')toast(t('cl_rate'));else if(e&&e.code==='not_granted'){sample=null;render();toast(t('cl_off'))}else toast(t('cl_fail'))}
 
 /* ================= UI helpers ================= */
 let toastT;function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600)}
@@ -284,9 +315,17 @@ function vCompass(){
         <div class="glyphrow">${DKEYS.map(k=>`<span class="${doms.has(k)?'':'off'}" style="${dvar(k)}">${glyph(k)}${esc(dLabel(k))}</span>`).join('')}</div>
         <div class="bigstat"><b class="mono">${fresh}</b><span class="muted">${esc(t('range_fresh'))}</span></div>
         <div class="bigstat"><b class="mono">${done}/7</b><span class="muted">${esc(t('range_done'))}</span></div></div>
+      ${HOSTED?claudePanel():''}
       <div class="panel"><h2>${esc(t('endless_h'))}</h2><p style="font-size:.88rem">${esc(t('endless_p',{n:fmtNum(sparkSpace()),seen:fmtNum(S.seen.length)}))}${sample?' '+esc(t('endless_claude')):''}</p></div>
     </aside>
   </div>`}
+function claudePanel(){
+  if(sample)return `<div class="panel" id="claudepanel"><h2>${esc(t('cl_h'))}</h2><p style="font-size:.88rem">✓ ${esc(t('cl_on'))} <span class="mono muted" style="font-size:.74rem">${esc((CL_MODELS.find(m=>m[0]===sample.model)||[0,sample.model])[1])}</span></p><button class="btn sm" data-act="clRemove">${icon('trash')}${esc(t('cl_remove'))}</button></div>`;
+  return `<div class="panel" id="claudepanel"><h2>${esc(t('cl_h'))}</h2><p class="muted" style="font-size:.84rem">${esc(t('cl_p'))}</p>
+    <label class="f" for="ckey">${esc(t('cl_key'))}<input type="password" id="ckey" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></label>
+    <label class="f" for="cmodel">${esc(t('cl_model'))}<select id="cmodel">${CL_MODELS.map(m=>`<option value="${m[0]}">${m[1]}</option>`).join('')}</select></label>
+    <button class="btn sm primary" data-act="clSave">${icon('check')}${esc(t('cl_save'))}</button>
+    <a href="https://console.anthropic.com/" target="_blank" rel="noopener" style="font-size:.84rem;color:var(--terra)">${esc(t('cl_get'))}</a></div>`}
 function dayCard(w,d,i,start){
   const date=addDays(start,i);const isToday=iso(date)===TODAY;const e=d[0];const dn=DayC(i);
   const head=`<div class="day-h"><span class="dname">${esc(dn)}</span><span class="ddate">${esc(fmtShort(date))}</span>${isToday?`<span class="pill">${esc(t('today'))}</span>`:''}</div>`;
@@ -343,7 +382,7 @@ function vToolbox(){
     </section>
   </div>`}
 function shareBox(x){const txt=weekText(x);return `<div class="sharebox"><label class="f" for="sh-${x.id}">${esc(t('share_label'))}</label><textarea id="sh-${x.id}" readonly>${esc(txt)}</textarea>
-  <div class="row" style="gap:6px"><button class="btn sm primary" data-act="copyShare" data-id="${x.id}">${icon('copy')}${esc(t('copy'))}</button><button class="btn sm" data-act="suggestWeek" data-id="${x.id}" ${db?'':'disabled'}>${icon('share')}${esc(t('suggest_commons'))}</button></div>${db?'':`<p class="muted" style="font-size:.78rem">${esc(t('commons_signin_note'))}</p>`}</div>`}
+  <div class="row" style="gap:6px"><button class="btn sm primary" data-act="copyShare" data-id="${x.id}">${icon('copy')}${esc(t('copy'))}</button><button class="btn sm" data-act="suggestWeek" data-id="${x.id}" ${db||HOSTED?'':'disabled'}>${icon('share')}${esc(t('suggest_commons'))}</button></div>${db||HOSTED?'':`<p class="muted" style="font-size:.78rem">${esc(t('commons_signin_note'))}</p>`}</div>`}
 function evCard(e,list){
   const x=evText(e);
   if(tb.editEv===e.id)return `<div class="ev" style="${dvar(e.domain)}" data-ev="${e.id}"><div class="ev-edit">
@@ -398,7 +437,7 @@ function vHappenings(){
   return `<section class="band"><div class="wrap band-in" style="padding-block:22px 20px">
     <div style="display:grid;gap:8px"><p class="eyebrow">${esc(t('hap_eyebrow',{n:bigNum(hapSpace())}))}</p>
     <h1 class="hap-title" aria-live="polite">${esc(hapTitleOf(H))}</h1><p class="lede">${esc(t('hap_lede'))}</p></div>
-    <div class="row"><button class="btn primary" data-act="hapSpin">${icon('dice')}${esc(t('hap_spin'))}</button><button class="btn" data-act="hapTitle">${icon('reroll')}${esc(t('hap_newname'))}</button>${sample?`<button class="btn" data-act="hapRiff">${icon('spark')}${esc(t('hap_claude'))}</button>`:''}</div>
+    <div class="row"><button class="btn primary" data-act="hapSpin">${icon('dice')}${esc(t('hap_spin'))}</button><button class="btn" data-act="hapTitle">${icon('reroll')}${esc(t('hap_newname'))}</button>${HOSTED&&!sample?`<button class="btn" data-act="toClaude">${icon('spark')}${esc(t('cl_hint'))}</button>`:''}${sample?`<button class="btn" data-act="hapRiff">${icon('spark')}${esc(t('hap_claude'))}</button>`:''}</div>
   </div></section>
   <div class="wrap">
     <div class="reels">${REEL_KEYS.map(k=>{const lb=T.reelLabels[k];return `<div class="reel${H.locks[k]?' locked':''}"><div class="reel-h"><span class="eyebrow">${esc(lb)}</span>
@@ -489,7 +528,7 @@ function vLibrary(){
       ${cf&&cf.id!=='inbox'?`<div class="row" style="gap:6px;border-top:1px dashed var(--line);padding-top:10px"><button class="btn sm" data-act="fRename" data-id="${cf.id}">${esc(t('rename'))}</button><button class="btn sm" data-act="fDel" data-id="${cf.id}"><span class="lbl">${esc(t('del_folder'))}</span></button></div><p class="muted" style="font-size:.76rem">${esc(t('del_folder_note'))}</p>`:''}
     </aside>
     <section style="min-width:0">
-      ${q?`<div class="sec-h"><h2>${esc(t('fresh_about',{x:L.q.trim()}))}</h2><button class="btn sm" data-act="regen">${icon('reroll')}${esc(t('more'))}</button>${sample?`<button class="btn sm" data-act="libClaude">${icon('spark')}${esc(t('ask_claude'))}</button>`:''}</div>
+      ${q?`<div class="sec-h"><h2>${esc(t('fresh_about',{x:L.q.trim()}))}</h2><button class="btn sm" data-act="regen">${icon('reroll')}${esc(t('more'))}</button>${HOSTED&&!sample?`<button class="btn sm" data-act="toClaude">${icon('spark')}${esc(t('cl_hint'))}</button>`:''}${sample?`<button class="btn sm" data-act="libClaude">${icon('spark')}${esc(t('ask_claude'))}</button>`:''}</div>
         <div class="cards">${gens.map(s=>`<article class="item" style="${dvar(s.domain)}">${dchip(s)}<h4>${esc(genTitle(s))}</h4><div class="row"><button class="btn sm" data-act="genSave" data-id="${s.id}">${icon('folder')}${esc(t('save'))}</button><button class="btn sm" data-act="genTray" data-id="${s.id}">${icon('plus')}${esc(t('to_tray'))}</button></div></article>`).join('')}${L.claude==='loading'?`<p class="muted">${esc(t('claude_thinking'))}</p>`:''}</div>
         <div class="sec-h" style="margin-top:22px"><h2>${esc(t('in_your_stuff'))}</h2><span class="mono muted">${found.length}</span></div>
         ${found.length?`<ul style="margin:0;padding-left:1.1rem;display:grid;gap:4px">${found.slice(0,40).map(f=>`<li><span class="tag">${esc(f.kind)}</span> <a href="#${f.go}" data-act="foundGo" data-go2="${f.go}" data-wid="${f.wid||''}" data-iid="${f.id||''}">${esc(f.label)}</a></li>`).join('')}</ul>`:`<p class="muted">${esc(t('nothing_mentions'))}</p>`}
@@ -501,9 +540,31 @@ function vLibrary(){
   </div>`}
 
 /* ================= COMMONS ================= */
-let C={posts:[],unsub:null,err:null};
-function subscribeCommons(){if(!db||C.unsub)return;try{C.unsub=db.collection('commons').orderBy('createdAt','desc').limit(60).onSnapshot(s=>{C.posts=s.docs.map(d=>({id:d.id,data:d.data()}));if(view==='commons')render()},e=>{C.err=e&&e.code;C.unsub=null;if(view==='commons')render()})}catch(e){}}
+let C={posts:[],unsub:null,err:null,pick:null};
+function subscribeCommons(){if(HOSTED){loadGH(false);return}if(!db||C.unsub)return;try{C.unsub=db.collection('commons').orderBy('createdAt','desc').limit(60).onSnapshot(s=>{C.posts=s.docs.map(d=>({id:d.id,data:d.data()}));if(view==='commons')render()},e=>{C.err=e&&e.code;C.unsub=null;if(view==='commons')render()})}catch(e){}}
+function vCommonsGH(){
+  const posts=GH.items.map(p=>{const w=decodeWeek(p.code);return w?Object.assign({w},p):null}).filter(Boolean);
+  const pickW=S.weeks.find(w=>w.id===C.pick)||curWeek();
+  return `<section class="band"><div class="wrap band-in" style="padding-block:22px 20px"><div style="display:grid;gap:8px"><p class="eyebrow">${esc(t('commons_eyebrow'))}</p><h1>${esc(t('commons_h1'))}</h1><p class="lede">${esc(t('commons_lede'))}</p></div></div></section>
+  <div class="wrap two">
+    <section style="min-width:0;display:grid;gap:12px;align-content:start">
+      <div class="row" style="justify-content:space-between"><p class="muted" style="font-size:.88rem;max-width:62ch">${esc(t('gh_notice'))}</p><button class="btn sm" data-act="ghRefresh">${icon('reroll')}${esc(t('gh_refresh'))}</button></div>
+      ${GH.state==='loading'?`<p class="muted">${esc(t('gh_loading'))}</p>`:''}
+      ${GH.state==='err'?`<div class="notice">${esc(t('gh_err'))} <a href="https://github.com/${REPO}/issues" target="_blank" rel="noopener">github.com/${REPO}/issues</a></div>`:''}
+      <div class="cards">${posts.map(p=>`<article class="item">${p.login?`<div class="row" style="gap:6px"><span class="tag">${esc(t('gh_by',{x:p.login}))}</span><span class="tag">${esc(t('gh_likes',{n:p.likes}))}</span></div>`:''}<h4 style="font-family:var(--display);font-size:1.5rem;font-weight:800">${esc(weekName(p.w))}</h4>${p.note?`<p class="muted">“${esc(p.note)}”</p>`:''}
+        <ol style="margin:0;padding-left:1.2rem;font-size:.86rem;display:grid;gap:2px">${p.w.days.map((d,i)=>`<li value="${i+1}"><b>${esc(DayS(i))}</b> ${esc(d.map(evTitle).join(' + ')||t('free'))}</li>`).join('')}</ol>
+        <div class="row"><button class="btn sm primary" data-act="adoptGh" data-id="${esc(p.id)}">${icon('plus')}${esc(t('adopt'))}</button>${/^https:\/\/github\.com\//.test(p.url)?`<a class="btn sm" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(t('gh_open'))}</a>`:''}</div></article>`).join('')||(GH.state==='ok'?`<p class="muted">${esc(t('commons_empty'))}</p>`:'')}</div>
+    </section>
+    <aside class="panel"><h2>${esc(t('suggest_h'))}</h2>
+      <label class="f" for="cw">${esc(t('f_week'))}<select id="cw">${S.weeks.map(w=>`<option value="${w.id}"${w.id===pickW.id?' selected':''}>${esc(weekName(w))}</option>`).join('')}</select></label>
+      <label class="f" for="cn">${esc(t('f_why'))}<textarea id="cn" rows="3" maxlength="280" placeholder="${esc(t('ph_why'))}"></textarea></label>
+      <a class="btn primary" id="ghpost" href="${esc(ghIssueURL(pickW,''))}" target="_blank" rel="noopener" style="justify-content:center">${icon('share')}${esc(t('gh_post'))}</a>
+      <p class="muted" style="font-size:.8rem">${esc(t('gh_post_note'))}</p>
+      <p class="muted" style="font-size:.8rem">${esc(t('gh_privacy'))}</p>
+    </aside>
+  </div>`}
 function vCommons(){
+  if(HOSTED)return vCommonsGH();
   const posts=C.posts.map(p=>{const o=p.data||{};const w=sanitizeCompact({n:o.name,d:o.days});return w?{id:p.id,w,note:typeof o.note==='string'?o.note.slice(0,280):'',mine:o.author===me,adopted:+o.adopted||0}:null}).filter(Boolean);
   return `<section class="band"><div class="wrap band-in" style="padding-block:22px 20px"><div style="display:grid;gap:8px"><p class="eyebrow">${esc(t('commons_eyebrow'))}</p><h1>${esc(t('commons_h1'))}</h1><p class="lede">${esc(t('commons_lede'))}</p></div></div></section>
   <div class="wrap two">
@@ -564,7 +625,7 @@ const A={
   delWeek(b){if(!confirmArm('dw'+b.dataset.id,b))return;S.weeks=S.weeks.filter(x=>x.id!==b.dataset.id);if(!S.weeks.find(x=>x.id===S.current))S.current=S.weeks[0].id;save();render();toast(t('toast_week_deleted'))},
   shareWeek(b){tb.share=tb.share===b.dataset.id?null:b.dataset.id;render()},
   copyShare(b){copyText(weekText(S.weeks.find(x=>x.id===b.dataset.id)),'#sh-'+b.dataset.id)},
-  async suggestWeek(b){await postWeek(S.weeks.find(x=>x.id===b.dataset.id),'')},
+  async suggestWeek(b){if(HOSTED){C.pick=b.dataset.id;go('commons');return}await postWeek(S.weeks.find(x=>x.id===b.dataset.id),'')},
   fillTray(){const rng=mulberry(hashStr(uid()));const avoid=seenSet();domainPlan(rng,4).forEach(d=>{const s=generateSpark(rng,d,avoid);markSeen(s.fp);S.tray.push(s)});save();render()},
   clearTray(b){if(!confirmArm('ct',b))return;S.tray=[];save();render()},
   evEdit(b){tb.editEv=b.dataset.id;render();const x=$('#ee-t');if(x)x.focus()},
@@ -608,10 +669,18 @@ const A={
   foundGo(b,ev){ev.preventDefault();if(b.dataset.wid){S.current=b.dataset.wid;save()}if(b.dataset.iid){L.edit=b.dataset.iid;L.q='';L.gen=null}go(b.dataset.go2)},
   async postWeek(){await postWeek(S.weeks.find(x=>x.id===$('#cw').value),$('#cn').value.trim())},
   async adopt(b){const p=C.posts.find(x=>x.id===b.dataset.id);if(!p)return;const o=p.data||{};const w=sanitizeCompact({n:o.name,d:o.days});if(!w)return;w.origin='commons';S.weeks.unshift(w);save();toast(t('toast_adopted'));try{await db.collection('commons').doc(p.id).update({adopted:(+o.adopted||0)+1})}catch(e){}},
+  ghRefresh(){loadGH(true)},
+  adoptGh(b){const p=GH.items.find(x=>x.id===b.dataset.id);if(!p)return;const w=decodeWeek(p.code);if(!w)return;w.origin='commons';S.weeks.unshift(w);save();toast(t('toast_adopted'))},
+  toClaude(){go('compass');setTimeout(()=>{const k=$('#ckey')||$('#claudepanel');if(k){k.scrollIntoView({block:'center',behavior:reduceMotion()?'auto':'smooth'});if(k.focus)k.focus({preventScroll:true})}},60)},
+  async clSave(b){const key=($('#ckey').value||'').trim();const model=$('#cmodel').value;if(!key){$('#ckey').focus();return}b.disabled=true;toast(t('cl_testing'));const s=byok(key,model);
+    try{await s.json('Reply with exactly this JSON: {"ok":true}');try{localStorage.setItem(CKEY,JSON.stringify({key,model}))}catch(e){}sample=s;render();toast(t('cl_saved'))}
+    catch(e){b.disabled=false;toast(e&&e.code==='bad_key'?t('cl_badkey'):e&&e.code==='rate_limited'?t('cl_rate'):t('cl_fail'))}},
+  clRemove(){try{localStorage.removeItem(CKEY)}catch(e){}sample=null;render();toast(t('cl_removed'))},
   async unpost(b){if(!confirmArm('up'+b.dataset.id,b))return;try{await db.collection('commons').doc(b.dataset.id).delete();toast(t('toast_removed_commons'))}catch(e){toast(t('toast_remove_fail'))}}
 };
 
 /* ================= event wiring ================= */
+function updateGhLink(){const a=$('#ghpost');if(!a)return;const w=S.weeks.find(x=>x.id===$('#cw').value)||curWeek();a.href=ghIssueURL(w,$('#cn').value.trim())}
 document.addEventListener('click',ev=>{
   const g=ev.target.closest('[data-go]');if(g){ev.preventDefault();go(g.dataset.go);return}
   const b=ev.target.closest('[data-act]');if(!b||b.disabled)return;const f=A[b.dataset.act];if(f){if(b.tagName==='A')ev.preventDefault();f(b,ev)}});
@@ -628,8 +697,9 @@ document.addEventListener('submit',ev=>{
 document.addEventListener('change',ev=>{const x=ev.target;
   if(x.dataset.move){const v=x.value;if(!v)return;const f=findEv(x.dataset.move);if(!f)return;if(v==='up')moveEv(x.dataset.move,f.key,Math.max(0,f.idx-1));else if(v==='down')moveEv(x.dataset.move,f.key,f.idx+2);else moveEv(x.dataset.move,v,null);render();const sel=$('#mv-'+x.dataset.move);if(sel)sel.focus();toast(t('toast_moved'))}
   if(x.dataset.movefolder){const it=S.items.find(i=>i.id===x.dataset.movefolder);it.folder=x.value;save();render();toast(t('toast_moved_to',{f:folderName(S.folders.find(f=>f.id===x.value))}))}
+  if(HOSTED&&x.id==='cw'){C.pick=x.value;updateGhLink()}
   if(x.dataset.bind==='wkstart'&&x.value){const w=curWeek();w.start=x.value;if(w.auto&&w.auto.k==='week_of')w.auto.d=x.value;save();render()}});
-document.addEventListener('input',ev=>{const x=ev.target;if(x.dataset.bind==='dq'){readDiary();dq=x.value;const pos=x.selectionStart;render();const s=$('#dsearch');s.focus();try{s.setSelectionRange(pos,pos)}catch(e){}}});
+document.addEventListener('input',ev=>{const x=ev.target;if(HOSTED&&(x.id==='cn'||x.id==='cw'))updateGhLink();if(x.dataset.bind==='dq'){readDiary();dq=x.value;const pos=x.selectionStart;render();const s=$('#dsearch');s.focus();try{s.setSelectionRange(pos,pos)}catch(e){}}});
 window.addEventListener('hashchange',()=>{const v=location.hash.replace('#','');if(VIEWS.includes(v)&&v!==view){view=v;render();if(v==='commons')subscribeCommons()}});
 
 /* ================= boot ================= */

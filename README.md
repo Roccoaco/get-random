@@ -16,7 +16,7 @@ Available in English, Italiano, Français, Español, Deutsch and Dansk. Use the 
 | **Happenings** | Eight lockable reels (format, theme, place, guests, rule, prop, soundtrack, closing ritual) give trillions of combinations for small events. |
 | **Diary** | Mood and energy scales, science-backed writing prompts, a third-person mode and a mood line. |
 | **Library** | Folders inside folders for notes, sparks and happenings. Search looks through all of your stuff and also invents fresh sparks about any word you type. |
-| **Commons** | Suggest weeks to others and adopt theirs. |
+| **Commons** | Suggest weeks to others and adopt theirs (GitHub issues on the public site). |
 | **Why it works** | The twelve theories behind the generator, with citations. |
 
 ### How the generator stays fresh
@@ -25,9 +25,13 @@ Sparks are built from templates with open slots (country, genre, colour, skill, 
 ## Privacy
 Weeks, diary and library are saved only in your own browser (`localStorage`). Nothing is sent to a server. Clearing site data or switching device starts fresh.
 
-## Two ways to run it
-- **GitHub Pages (this repo):** everything above works, except the **Commons** and the **Claude ideas** (wild cards, happening plans, "Ask Claude"). Those rely on services that only exist inside claude.ai, so they hide or show a notice here.
-- **claude.ai artifact:** the full version, including the Commons and Claude ideas, for people the artifact is shared with.
+## Commons and Claude ideas on GitHub Pages
+Both work on the public site, with no server.
+
+- **Commons:** shared weeks are stored as [issues in this repository](https://github.com/Roccoaco/get-random/issues). The app reads them through GitHub's public API, so anyone can browse and adopt weeks without an account. GitHub allows 60 anonymous requests per hour per visitor, and the app caches results for 5 minutes. **Post on GitHub** opens a pre-filled issue: you need a free GitHub account, and you press "Submit new issue" to publish. 👍 reactions count as likes. To remove a post, close the issue. The repository owner can moderate by closing or deleting issues.
+- **Claude ideas** (wild-card sparks, happening plans, "Ask Claude" in search): each visitor pastes their own Anthropic API key in the Compass sidebar. The key is stored only in that browser and sent only to `api.anthropic.com`, and usage is billed to the visitor's own Anthropic account. Keys are available at [console.anthropic.com](https://console.anthropic.com/).
+
+Inside claude.ai the same app uses the artifact's built-in shared store and Claude instead, so no key or GitHub account is needed there.
 
 ## Build from source
 The pages are plain HTML, CSS and JavaScript with no dependencies.
