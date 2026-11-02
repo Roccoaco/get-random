@@ -1,0 +1,383 @@
+<title>Get Random Brand Book</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;1,500&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a printed brand manual. Numbered chapters (they are a real sequence), wide specimen plates, and asset mockups at true proportions. */
+:root{
+  --sun:#F2C94C; --terra:#A54E2E; --navy:#2F4356; --ink:#23303D; --paper:#FBF4E2; --cream:#FFFCF3;
+  --bg:#FBF4E2; --fg:#23303D; --fg2:#56606A; --line:#E2D2A6; --plate:#FFFCF3;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"Atkinson Hyperlegible",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141C25;--fg:#F3E9D0;--fg2:#B8B09C;--line:#304050;--plate:#1C2733;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141C25;--fg:#F3E9D0;--fg2:#B8B09C;--line:#304050;--plate:#1C2733;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:1rem;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,h4{font-family:var(--display);margin:0;line-height:1.02;text-wrap:balance}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--fg2)}
+.lede{font-size:1.12rem;max-width:62ch}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg.mk{display:block}
+.mk-default{--ring:#2F4356;--needle:#A54E2E;--dots:#2F4356}
+.mk-rev{--ring:#F2C94C;--needle:#EE9670;--dots:#F2C94C}
+.mk-mono{--ring:currentColor;--needle:currentColor;--dots:currentColor}
+.mk-sun{--ring:#23303D;--needle:#A54E2E;--dots:#23303D}
+
+/* cover */
+.cover{background:var(--sun);color:#23303D}
+.cover-in{padding-block:56px 48px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:center}
+.cover h1{font-size:clamp(3.6rem,11vw,8.5rem);font-weight:800;letter-spacing:-.02em}
+.cover .rule{width:96px;height:4px;background:#23303D;margin:18px 0}
+.cover .eyebrow{color:#23303D}
+.cover-mark{justify-self:center;width:min(360px,80%)}
+.cover-mark svg{width:100%;height:auto}
+
+/* chapters */
+.ch{padding-block:56px 20px;border-top:2px solid var(--fg)}
+.ch-h{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 22px;align-items:end;margin-bottom:28px}
+.ch-n{font-family:var(--display);font-weight:800;font-size:4.5rem;line-height:.8;color:var(--terra)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ch-n{color:#EE9670}}
+:root[data-theme="dark"] .ch-n{color:#EE9670}
+.ch-h h2{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:800}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.plate{background:var(--plate);border:1.5px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:12px;min-width:0;align-content:start}
+.plate h3{font-size:1.6rem;font-weight:800}
+.plate p{font-size:.95rem}
+.cap{font-family:var(--mono);font-size:.74rem;color:var(--fg2)}
+ul.clean{margin:0;padding-left:1.1rem;display:grid;gap:6px}
+
+/* logo plates */
+.lockup{display:flex;align-items:center;gap:16px;padding:34px 24px;border-radius:12px;min-height:180px;justify-content:center}
+.lockup svg{width:84px;height:84px;flex:none}
+.lockup span{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6vw,3.6rem);letter-spacing:-.01em;line-height:1}
+.on-sun{background:#F2C94C;color:#23303D}.on-navy{background:#23303D;color:#F2C94C}.on-paper{background:#FBF4E2;color:#23303D;border:1.5px solid #E2D2A6}.on-terra{background:#A54E2E;color:#FFF8EA}
+.anatomy{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:24px;align-items:center}
+.anatomy svg{width:100%;height:auto;background:#FBF4E2;border-radius:12px;border:1.5px solid #E2D2A6}
+.anatomy ol{margin:0;padding-left:1.2rem;display:grid;gap:8px}
+.dont{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dont figure{margin:0;display:grid;gap:6px}
+.dont .box{aspect-ratio:1;max-width:100%;background:#FBF4E2;border:1.5px solid #E2D2A6;border-radius:10px;display:grid;place-items:center;position:relative;overflow:hidden}
+.dont .box::after{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 2px),#A33A2E calc(50% - 2px),#A33A2E calc(50% + 2px),transparent calc(50% + 2px))}
+.dont svg{width:55%;height:auto}
+.dont figcaption{font-size:.84rem}
+.sizes{display:flex;align-items:end;gap:26px;flex-wrap:wrap;color:var(--fg)}
+
+/* colour */
+.swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.sw{border-radius:12px;overflow:hidden;border:1.5px solid var(--line);display:grid;min-width:0}
+.sw .chip{aspect-ratio:1/1.05;padding:12px;display:flex;align-items:flex-end;font-family:var(--display);font-weight:800;font-size:1.5rem}
+.sw .meta{padding:10px 12px;font-size:.78rem;display:grid;gap:2px;background:var(--plate)}
+.sw .meta b{font-size:.95rem}
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.pair{border-radius:10px;padding:14px;display:grid;gap:4px}
+.pair b{font-family:var(--display);font-size:1.6rem;font-weight:800;line-height:1}
+.pair span{font-family:var(--mono);font-size:.74rem}
+.doms{display:flex;flex-wrap:wrap;gap:8px}
+.doms span{display:inline-flex;gap:7px;align-items:center;padding:6px 12px;border-radius:999px;font-weight:700;font-size:.88rem;color:#fff}
+.doms svg{width:13px;height:13px}
+
+/* type */
+.spec{display:grid;gap:4px;border-bottom:1.5px solid var(--line);padding-bottom:18px}
+.spec .big{font-size:clamp(3rem,9vw,6rem);line-height:.95}
+.scale-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:baseline;border-top:1px dashed var(--line);padding-block:8px}
+
+/* voice */
+.vt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.say{border-left:5px solid #3E7350;padding:10px 14px;background:var(--plate);border-radius:0 10px 10px 0}
+.nosay{border-left:5px solid #A33A2E;padding:10px 14px;background:var(--plate);border-radius:0 10px 10px 0}
+
+/* assets */
+.assets{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+.asset{display:grid;gap:8px;min-width:0}
+.a4{grid-column:span 4}.a5{grid-column:span 5}.a3{grid-column:span 3}.a7{grid-column:span 7}.a6{grid-column:span 6}
+.sq{aspect-ratio:1;max-width:100%;border-radius:6px;overflow:hidden;position:relative;container-type:inline-size}
+.story{aspect-ratio:9/16;max-width:100%;border-radius:14px;overflow:hidden;position:relative;container-type:inline-size}
+.poster{aspect-ratio:1/1.414;max-width:100%;overflow:hidden;position:relative;container-type:inline-size;border-radius:4px}
+/* IG day card */
+.ig-day{background:#F2C94C;color:#A54E2E;padding:7cqw;display:flex;flex-direction:column;height:100%}
+.ig-day .t{font-family:var(--display);font-weight:800;font-size:11cqw;line-height:1;color:#23303D;text-align:center}
+.ig-day .s{font-family:var(--display);font-style:italic;font-weight:500;font-size:4cqw;text-align:center;color:#23303D}
+.ig-day .r{width:12cqw;height:.6cqw;background:#23303D;margin:3cqw auto}
+.ig-day .d{font-family:var(--display);font-weight:500;font-size:9cqw;line-height:1.1;margin-top:auto;color:#A54E2E}
+.ig-day .d b{font-weight:800;color:#23303D;display:block;font-size:5cqw;letter-spacing:.08em;font-family:var(--mono)}
+.ig-day .f{display:flex;justify-content:space-between;align-items:end;margin-top:auto;font-family:var(--mono);font-size:3cqw;color:#23303D}
+.ig-day .f svg{width:12cqw;height:12cqw}
+.ig-terra{background:#A54E2E}.ig-terra .t,.ig-terra .s,.ig-terra .f{color:#F2C94C}.ig-terra .r{background:#F2C94C}.ig-terra .d{color:#FBF4E2}.ig-terra .d b{color:#F2C94C}
+/* IG week list */
+.ig-week{background:#23303D;color:#FBF4E2;padding:7cqw;height:100%;display:flex;flex-direction:column;gap:2.2cqw}
+.ig-week h4{font-size:10cqw;font-weight:800;color:#F2C94C}
+.ig-week ol{list-style:none;margin:0;padding:0;display:grid;gap:1.6cqw;font-size:3.6cqw}
+.ig-week li{display:grid;grid-template-columns:13cqw 1fr;gap:2cqw;border-top:.3cqw solid rgba(242,201,76,.35);padding-top:1.4cqw}
+.ig-week li b{font-family:var(--mono);color:#F2C94C;font-size:3cqw;letter-spacing:.06em}
+.ig-week .f{margin-top:auto;font-family:var(--mono);font-size:2.8cqw;color:#F2C94C;display:flex;justify-content:space-between}
+/* story */
+.st{background:#F2C94C;color:#23303D;height:100%;padding:9cqw 8cqw;display:flex;flex-direction:column;gap:5cqw}
+.st .q{font-family:var(--display);font-weight:800;font-size:15cqw;line-height:.95}
+.st .opts{display:grid;gap:3cqw}
+.st .opts span{background:#FFFCF3;border-radius:999px;padding:3.5cqw 5cqw;font-weight:700;font-size:5cqw;text-align:center}
+.st .opts span:first-child{background:#23303D;color:#F2C94C}
+.st .f{margin-top:auto;display:flex;align-items:center;gap:3cqw;font-family:var(--display);font-weight:800;font-size:7cqw}
+.st .f svg{width:12cqw;height:12cqw}
+/* poster */
+.po{background:#A54E2E;color:#FBF4E2;height:100%;padding:8cqw;display:flex;flex-direction:column}
+.po h4{font-size:19cqw;font-weight:800;line-height:.86;color:#F2C94C;letter-spacing:-.01em}
+.po .map{flex:1;position:relative;margin-block:5cqw}
+.po .map svg{position:absolute;inset:0;width:100%;height:100%}
+.po p{font-size:4.2cqw;max-width:30ch}
+.po .f{display:flex;justify-content:space-between;align-items:end;margin-top:5cqw;font-family:var(--display);font-weight:800;font-size:7cqw;color:#F2C94C}
+.po .f svg{width:14cqw;height:14cqw}
+/* app icon */
+.icons{display:flex;gap:18px;align-items:end;flex-wrap:wrap}
+.appicon{width:120px;height:120px;border-radius:27px;background:#F2C94C;display:grid;place-items:center;box-shadow:0 8px 20px rgba(35,48,61,.18)}
+.appicon svg{width:76%;height:76%}
+.appicon.dark{background:#23303D}
+.badge{width:120px;height:120px;border-radius:50%;background:#A54E2E;color:#F2C94C;display:grid;place-items:center;text-align:center;font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1;padding:12px;border:4px dashed #F2C94C;outline:4px solid #A54E2E}
+/* phone screenshot frame */
+.phone{aspect-ratio:9/19;max-width:100%;border-radius:30px;background:#23303D;padding:10px;container-type:inline-size}
+.phone .scr{background:#FBF4E2;border-radius:22px;height:100%;overflow:hidden;display:flex;flex-direction:column}
+.phone .bar{background:#F2C94C;padding:7cqw 6cqw 5cqw;color:#23303D}
+.phone .bar b{font-family:var(--display);font-size:11cqw;font-weight:800;line-height:1;display:block}
+.phone .card{margin:4cqw 5cqw 0;background:#FFFCF3;border:1px solid #E2D2A6;border-radius:4cqw;padding:4cqw;display:grid;gap:1.5cqw;color:#23303D}
+.phone .card i{font-style:normal;font-family:var(--mono);font-size:3.2cqw;color:#A54E2E;text-transform:uppercase;letter-spacing:.06em}
+.phone .card b{font-size:5cqw;line-height:1.2}
+.phone .card.today{border:2px solid #23303D}
+
+/* campaign */
+.phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.phase{background:var(--plate);border:1.5px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:8px;align-content:start;position:relative}
+.phase .wk{font-family:var(--mono);font-size:.74rem;color:var(--fg2)}
+.phase h4{font-size:1.7rem;font-weight:800}
+.phase p{font-size:.9rem}
+.tablewrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--fg2);background:var(--plate)}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.persona{display:grid;gap:6px}
+.persona .who{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.kpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.kpi div{border-top:3px solid var(--fg);padding-top:10px;display:grid;gap:4px}
+.kpi b{font-family:var(--display);font-size:2.2rem;font-weight:800;line-height:1}
+.copy{font-family:var(--mono);font-size:.82rem;background:var(--plate);border:1.5px dashed var(--line);border-radius:10px;padding:12px;white-space:pre-wrap}
+footer{border-top:2px solid var(--fg);margin-top:40px;padding-block:20px 36px;font-size:.86rem;color:var(--fg2)}
+
+@media (max-width:900px){
+  .cover-in,.grid2,.anatomy,.vt{grid-template-columns:minmax(0,1fr)}
+  .grid3,.phases{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .swatches{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .assets{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .a3,.a4,.a5,.a6,.a7{grid-column:span 1}
+  .a-wide{grid-column:1/-1}
+}
+@media (max-width:520px){
+  .grid3,.phases,.assets{grid-template-columns:minmax(0,1fr)}
+  .dont{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .swatches{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ch-n{font-size:3.2rem}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 64 64">
+    <circle cx="34" cy="30" r="20" fill="none" style="stroke:var(--ring)" stroke-width="6"/>
+    <path d="M19.5 44.5L9 55" style="stroke:var(--ring)" stroke-width="7" stroke-linecap="round"/>
+    <g style="fill:var(--dots)"><circle cx="34" cy="16.5" r="1.7"/><circle cx="44.6" cy="21.6" r="1.7"/><circle cx="47.2" cy="33" r="1.7"/><circle cx="39.9" cy="42.2" r="1.7"/><circle cx="28.1" cy="42.2" r="1.7"/><circle cx="20.8" cy="33" r="1.7"/><circle cx="23.4" cy="21.6" r="1.7"/></g>
+    <path d="M30 35.5L36.5 28.5 33 25.5 41.5 18" fill="none" style="stroke:var(--needle)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="28" cy="38" r="3.4" style="fill:var(--needle)"/>
+  </symbol>
+</svg>
+
+<header class="cover">
+  <div class="wrap cover-in">
+    <div>
+      <p class="eyebrow">Brand book · version 1.0 · October 2026 · a Curioster project</p>
+      <h1>Get random!</h1>
+      <div class="rule"></div>
+      <p class="lede">The identity, voice, assets and launch campaign for a compass that does not point north. Built on the original Curioster posts: the mustard, the terracotta, the condensed caps and the line “Have fun, be yourself and enjoy.”</p>
+    </div>
+    <div class="cover-mark"><svg class="mk mk-sun" viewBox="0 0 64 64" role="img" aria-label="Get Random mark"><use href="#mark"/></svg></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section class="ch" id="idea">
+  <div class="ch-h"><span class="ch-n">1</span><div><p class="eyebrow">Brand idea</p><h2>Get lost on purpose.</h2></div></div>
+  <div class="grid2">
+    <div class="plate"><h3>The insight</h3><p>Most of us live the same week fifty-two times a year. Routines are efficient, and they quietly flatten memory, mood and curiosity. People don’t lack ideas; they lack a gentle push that is specific, small and different every time.</p>
+      <h3>The promise</h3><p>Get Random hands you seven small doors a week, one a day, each grounded in motivation science and never repeated. You open them in your own way, write down what happened, and pass the best weeks on.</p></div>
+    <div class="plate"><h3>Personality</h3>
+      <ul class="clean"><li><b>Curious</b>, never random for its own sake. Every spark has a reason.</li><li><b>Warm</b>, like a friend who texts “come on, try it”.</li><li><b>Brave</b>, but small-brave. Nobody has to climb a mountain on a Tuesday.</li><li><b>Evidence-led</b>, wearing its science lightly.</li><li><b>Open to everyone</b>: any age, budget, body, city or culture.</li></ul>
+      <h3>Lines</h3><ul class="clean"><li><b>Get lost on purpose.</b> Campaign line.</li><li><b>Have fun, be yourself and enjoy.</b> Heritage line from Curioster, kept as the sign-off.</li><li><b>Seven doors a week.</b> Product descriptor.</li><li><b>Randomness, with a method.</b> For press, partners and science audiences.</li></ul></div>
+  </div>
+</section>
+
+<section class="ch" id="logo">
+  <div class="ch-h"><span class="ch-n">2</span><div><p class="eyebrow">Logo</p><h2>The bent needle.</h2></div></div>
+  <div class="anatomy">
+    <svg class="mk-default" viewBox="0 0 64 64" role="img" aria-label="Mark anatomy"><use href="#mark"/></svg>
+    <ol>
+      <li><b>The ring is the week.</b> A closed loop, like the seven days that repeat.</li>
+      <li><b>Seven dots are the days.</b> They sit inside the ring, evenly spaced, so no day is the default start.</li>
+      <li><b>The needle bends.</b> A compass needle that zig-zags instead of pointing north: the non-linear path.</li>
+      <li><b>The dot is the “!”.</b> Read the needle and its base together and you get the exclamation mark from the wordmark, tilted.</li>
+      <li><b>The handle is heritage.</b> Ring plus handle is the Curioster magnifying glass. Curiosity is still how you look.</li>
+    </ol>
+  </div>
+  <div class="grid2" style="margin-top:22px">
+    <div class="lockup on-sun"><svg class="mk mk-sun" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg><span>Get random!</span></div>
+    <div class="lockup on-navy"><svg class="mk mk-rev" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg><span>Get random!</span></div>
+    <div class="lockup on-paper"><svg class="mk mk-default" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg><span>Get random!</span></div>
+    <div class="lockup on-terra"><svg class="mk mk-mono" viewBox="0 0 64 64" aria-hidden="true" style="color:#FFF8EA"><use href="#mark"/></svg><span>Get random!</span></div>
+  </div>
+  <p class="cap" style="margin-top:10px">Primary on Sun · Reversed on Ink · Default on Paper · One-colour on Terracotta. The wordmark is Barlow Condensed ExtraBold, lowercase after the capital G, always with its “!”.</p>
+  <div class="grid2" style="margin-top:22px">
+    <div class="plate"><h3>Clear space and size</h3><p>Keep a margin equal to the ring’s stroke × 3 on all sides (half the mark’s height). Below 24 px use the mark alone; below 16 px drop the seven dots (favicon cut).</p>
+      <div class="sizes"><svg class="mk mk-default" viewBox="0 0 64 64" width="96" height="96" aria-hidden="true"><use href="#mark"/></svg><svg class="mk mk-default" viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><use href="#mark"/></svg><svg class="mk mk-default" viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><use href="#mark"/></svg><span class="cap">96 · 48 · 24 px</span></div></div>
+    <div class="plate"><h3>Please don’t</h3>
+      <div class="dont">
+        <figure><div class="box"><svg class="mk mk-default" viewBox="0 0 64 64" style="transform:scaleX(1.5)" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Stretch it</figcaption></figure>
+        <figure><div class="box"><svg class="mk" viewBox="0 0 64 64" style="--ring:#6A5394;--needle:#3E7350;--dots:#6A5394" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Recolour it</figcaption></figure>
+        <figure><div class="box"><svg class="mk mk-default" viewBox="0 0 64 64" style="transform:rotate(45deg)" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Rotate it</figcaption></figure>
+        <figure><div class="box" style="background:#E3B330"><svg class="mk" viewBox="0 0 64 64" style="--ring:#C9A33A;--needle:#D9A13B;--dots:#C9A33A" aria-hidden="true"><use href="#mark"/></svg></div><figcaption>Low contrast</figcaption></figure>
+      </div></div>
+  </div>
+</section>
+
+<section class="ch" id="colour">
+  <div class="ch-h"><span class="ch-n">3</span><div><p class="eyebrow">Colour</p><h2>Sun, clay and slate.</h2></div></div>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#F2C94C;color:#23303D">Sun</div><div class="meta"><b>#F2C94C</b><span class="mono">RGB 242 201 76</span><span>Primary ground</span></div></div>
+    <div class="sw"><div class="chip" style="background:#A54E2E;color:#FFF8EA">Clay</div><div class="meta"><b>#A54E2E</b><span class="mono">RGB 165 78 46</span><span>Action, needle</span></div></div>
+    <div class="sw"><div class="chip" style="background:#2F4356;color:#F2C94C">Slate</div><div class="meta"><b>#2F4356</b><span class="mono">RGB 47 67 86</span><span>Mark, structure</span></div></div>
+    <div class="sw"><div class="chip" style="background:#23303D;color:#FBF4E2">Ink</div><div class="meta"><b>#23303D</b><span class="mono">RGB 35 48 61</span><span>Text, dark ground</span></div></div>
+    <div class="sw"><div class="chip" style="background:#FBF4E2;color:#23303D">Paper</div><div class="meta"><b>#FBF4E2</b><span class="mono">RGB 251 244 226</span><span>Working surface</span></div></div>
+  </div>
+  <h3 style="font-size:1.6rem;margin:26px 0 12px">Tested pairings (WCAG 2.2)</h3>
+  <div class="pairs">
+    <div class="pair" style="background:#F2C94C;color:#23303D"><b>Ink on Sun</b><span>8.5 : 1 · AAA, any size</span></div>
+    <div class="pair" style="background:#FBF4E2;color:#23303D;border:1px solid #E2D2A6"><b>Ink on Paper</b><span>12.3 : 1 · AAA</span></div>
+    <div class="pair" style="background:#FBF4E2;color:#A54E2E;border:1px solid #E2D2A6"><b>Clay on Paper</b><span style="color:#23303D">5.1 : 1 · AA body text</span></div>
+    <div class="pair" style="background:#A54E2E;color:#FFF8EA"><b>Cream on Clay</b><span>5.3 : 1 · AA buttons</span></div>
+    <div class="pair" style="background:#2F4356;color:#F2C94C"><b>Sun on Slate</b><span>6.4 : 1 · AA</span></div>
+    <div class="pair" style="background:#F2C94C;color:#A54E2E"><b>Clay on Sun</b><span style="color:#23303D">3.5 : 1 · display sizes only, 24 px+</span></div>
+  </div>
+  <h3 style="font-size:1.6rem;margin:26px 0 12px">Domain palette</h3>
+  <p style="margin-bottom:12px;max-width:62ch">Ten domains of a rich week. Each always appears with its glyph and name, so colour is never the only signal.</p>
+  <div class="doms">
+    <span style="background:#A9561F"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#fff"/></svg>Senses</span>
+    <span style="background:#2F7C80"><svg viewBox="0 0 12 12"><path d="M6 1l5 10H1z" fill="#fff"/></svg>Explore</span>
+    <span style="background:#2F4356"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" fill="#fff"/></svg>Learn</span>
+    <span style="background:#B4417A"><svg viewBox="0 0 12 12"><path d="M6 .5L11.5 6 6 11.5.5 6z" fill="#fff"/></svg>Create</span>
+    <span style="background:#8C6A08"><svg viewBox="0 0 12 12"><circle cx="3.6" cy="6" r="3.2" fill="#fff"/><circle cx="8.4" cy="6" r="3.2" fill="none" stroke="#fff" stroke-width="1.6"/></svg>Connect</span>
+    <span style="background:#3E7350"><svg viewBox="0 0 12 12"><path d="M1 6h8M6 2.5L10 6 6 9.5" stroke="#fff" stroke-width="2" fill="none"/></svg>Move</span>
+    <span style="background:#6A5394"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.8" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M6 1.2a4.8 4.8 0 0 1 0 9.6z" fill="#fff"/></svg>Reflect</span>
+    <span style="background:#B5482F"><svg viewBox="0 0 12 12"><path d="M6 10.5S1 7.4 1 4.2A2.5 2.5 0 0 1 6 3a2.5 2.5 0 0 1 5 1.2c0 3.2-5 6.3-5 6.3z" fill="#fff"/></svg>Give</span>
+    <span style="background:#356C9E"><svg viewBox="0 0 12 12"><path d="M6 .8l1.5 3.6 3.8.3-2.9 2.5.9 3.8L6 9 2.7 11l.9-3.8L.7 4.7l3.8-.3z" fill="#fff"/></svg>Awe</span>
+    <span style="background:#6E5A14"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.4" fill="none" stroke="#fff" stroke-width="2.2"/></svg>Play</span>
+  </div>
+</section>
+
+<section class="ch" id="type">
+  <div class="ch-h"><span class="ch-n">4</span><div><p class="eyebrow">Typography</p><h2>Tall voice, easy read.</h2></div></div>
+  <div class="grid3">
+    <div class="spec"><span class="cap">Display · Barlow Condensed 800</span><span class="big" style="font-family:var(--display);font-weight:800">Aa!</span><p>The condensed caps from the original posts, made free and web-ready. Headlines, day names, the wordmark.</p></div>
+    <div class="spec"><span class="cap">Body · Atkinson Hyperlegible</span><span class="big" style="font-family:var(--body);font-weight:700">Aa</span><p>Designed by the Braille Institute so letters like I, l and 1 never blur together. Everything people need to read.</p></div>
+    <div class="spec"><span class="cap">Utility · IBM Plex Mono</span><span class="big" style="font-family:var(--mono)">Aa</span><p>Labels, week codes, numbers and citations. A quiet lab-notebook voice for the science.</p></div>
+  </div>
+  <div style="margin-top:20px">
+    <div class="scale-row"><span class="cap">Hero 64/0.95</span><span style="font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6vw,4rem);line-height:.95">Seven doors this week.</span></div>
+    <div class="scale-row"><span class="cap">Day 22/1.1 caps</span><span style="font-family:var(--display);font-weight:800;font-size:1.4rem;text-transform:uppercase">Thursday</span></div>
+    <div class="scale-row"><span class="cap">Spark 17/1.35</span><span style="font-weight:700;font-size:1.06rem">Pick Bhutan and learn three moments from its history</span></div>
+    <div class="scale-row"><span class="cap">Body 16/1.55</span><span>Lock what you like, spin the rest. Every spark comes with a reason.</span></div>
+    <div class="scale-row"><span class="cap">Label 12 mono</span><span class="mono" style="font-size:.75rem;letter-spacing:.08em;text-transform:uppercase">Week code HD8J-XFRM · Awe · 30 min</span></div>
+  </div>
+</section>
+
+<section class="ch" id="voice">
+  <div class="ch-h"><span class="ch-n">5</span><div><p class="eyebrow">Voice and accessibility</p><h2>Talk like a curious friend.</h2></div></div>
+  <div class="vt">
+    <div class="say"><b>Say</b><p>“Ask the barista one real question about their day.”</p><p class="cap">Specific, doable today, kind.</p></div>
+    <div class="nosay"><b>Don’t say</b><p>“Step outside your comfort zone and unlock your potential!”</p><p class="cap">Vague, preachy, hype.</p></div>
+    <div class="say"><b>Say</b><p>“Brief chats with strangers tend to lift mood. Sandstrom &amp; Dunn, 2014.”</p><p class="cap">Science named, claim sized right.</p></div>
+    <div class="nosay"><b>Don’t say</b><p>“Science proves this will make you 40% happier.”</p><p class="cap">Over-claiming. We never invent numbers.</p></div>
+  </div>
+  <div class="grid2" style="margin-top:20px">
+    <div class="plate"><h3>Writing rules</h3><ul class="clean"><li>Sparks start with a verb and name a real thing.</li><li>One exclamation mark per piece, and the logo already has it.</li><li>No streak guilt, no “you missed a day”. Free days are allowed.</li><li>Plain words over jargon. Cite theories by name and year.</li><li>Inclusive by default: no assumptions about money, body, family, faith or city size.</li></ul></div>
+    <div class="plate"><h3>Accessibility commitments</h3><ul class="clean"><li>All text pairings meet WCAG AA; core text meets AAA.</li><li>Colour always paired with a shape and a word.</li><li>Every drag-and-drop has a keyboard Move menu.</li><li>Three text sizes built into the header.</li><li>Motion respects reduced-motion settings.</li><li>Light and dark themes designed, not inverted.</li></ul></div>
+  </div>
+</section>
+
+<section class="ch" id="assets">
+  <div class="ch-h"><span class="ch-n">6</span><div><p class="eyebrow">Marketing assets</p><h2>The posts grew up.</h2></div></div>
+  <p class="lede" style="margin-bottom:22px">The Curioster day cards are kept as the heart of the system: one day, one sentence, big. They now carry the mark, a week code, and the domain label.</p>
+  <div class="assets">
+    <figure class="asset a4" style="margin:0"><div class="sq"><div class="ig-day"><div class="t">Get random!</div><div class="s">Have fun, be yourself and enjoy.</div><div class="r"></div><div class="d"><b>MONDAY · SENSES</b>Listen to an album of Ethio-jazz, start to finish.</div><div class="f"><span>HD8J-XFRM · 1/7</span><svg class="mk mk-sun" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div></div></div><figcaption class="cap">Instagram day card, 1080 × 1080, Sun</figcaption></figure>
+    <figure class="asset a4" style="margin:0"><div class="sq"><div class="ig-day ig-terra"><div class="t">Get random!</div><div class="s">Have fun, be yourself and enjoy.</div><div class="r"></div><div class="d"><b>TUESDAY · CONNECT</b>Greet people as you walk. Aim for seven hellos.</div><div class="f"><span>HD8J-XFRM · 2/7</span><svg class="mk mk-rev" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div></div></div><figcaption class="cap">Instagram day card, alternate Clay</figcaption></figure>
+    <figure class="asset a4" style="margin:0"><div class="sq"><div class="ig-week"><h4>This week’s doors</h4><ol>
+      <li><b>MON</b>Ethio-jazz, whole album</li><li><b>TUE</b>Seven hellos on your walk</li><li><b>WED</b>Dress only in saffron</li><li><b>THU</b>Three moments from Bhutan’s history</li><li><b>FRI</b>30 minutes on what makes you happy</li><li><b>SAT</b>Recommend a film to three friends</li><li><b>SUN</b>Write about yourself in the third person</li></ol>
+      <div class="f"><span>@curioster</span><span>Swipe to adopt →</span></div></div></div><figcaption class="cap">Carousel cover, the weekly list</figcaption></figure>
+    <figure class="asset a3" style="margin:0"><div class="story"><div class="st"><span class="mono" style="font-size:3.4cqw;letter-spacing:.08em">POLL · STORY</span><div class="q">Which door tonight?</div><div class="opts"><span>Watch the blue hour</span><span>Learn a bowline knot</span><span>Call an old friend</span></div><div class="f"><svg class="mk mk-sun" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg>Get random!</div></div></div><figcaption class="cap">Story poll, 1080 × 1920</figcaption></figure>
+    <figure class="asset a6" style="margin:0"><div class="poster"><div class="po"><h4>Get lost on purpose.</h4><div class="map"><svg viewBox="0 0 200 160" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g fill="none" stroke="#F2C94C" stroke-width="1.2" opacity=".35"><path d="M0 40h200M0 80h200M0 120h200M50 0v160M100 0v160M150 0v160"/></g><path d="M18 140 L48 104 L40 88 L78 70 L92 92 L124 54 L118 38 L160 26 L176 44" fill="none" stroke="#FBF4E2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 7"/><g fill="#F2C94C"><circle cx="18" cy="140" r="6"/><circle cx="48" cy="104" r="4"/><circle cx="78" cy="70" r="4"/><circle cx="92" cy="92" r="4"/><circle cx="124" cy="54" r="4"/><circle cx="160" cy="26" r="4"/><circle cx="176" cy="44" r="6"/></g></svg></div><p>Seven small doors a week, picked by science, never the same twice. Free on the web.</p><div class="f"><span>Get random!</span><svg class="mk mk-rev" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div></div></div><figcaption class="cap">Campaign poster, A-series (1 : 1.414)</figcaption></figure>
+    <figure class="asset a3" style="margin:0"><div class="phone"><div class="scr"><div class="bar"><span class="mono" style="font-size:3.2cqw">WEEK OF 19 OCT</span><b>Seven doors this week.</b></div><div class="card"><i>Mon · Senses</i><b>An album of fado, start to finish</b></div><div class="card today"><i>Tue · Connect · Today</i><b>Seven hellos on your walk</b></div><div class="card"><i>Wed · Awe</i><b>Watch the blue hour, phone away</b></div></div></div><figcaption class="cap">Store screenshot frame</figcaption></figure>
+    <figure class="asset a6" style="margin:0;align-content:start"><div class="plate" style="gap:18px"><div class="icons"><div class="appicon"><svg class="mk mk-sun" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div><div class="appicon dark"><svg class="mk mk-rev" viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg></div><div class="badge">I opened all 7 doors!</div></div><p class="cap">App icon, light and dark · Sticker badge for finished weeks</p></div></figure>
+    <figure class="asset a6" style="margin:0;align-content:start"><div class="plate"><h3>Caption kit</h3><div class="copy">Monday’s door: one full album, no skipping.
+Which genre did Get Random hand you?
+Tell us below, then go get lost on purpose.
+#GetRandom #SevenDoors</div></div></figure>
+  </div>
+</section>
+
+<section class="ch" id="campaign">
+  <div class="ch-h"><span class="ch-n">7</span><div><p class="eyebrow">Campaign strategy</p><h2>52 different weeks.</h2></div></div>
+  <div class="grid2">
+    <div class="plate"><h3>Objective</h3><p>Turn the Curioster audience into the first Get Random community, then grow to people who feel their weeks blur together. Success is people who open doors, not people who download.</p>
+      <h3>Core mechanic</h3><p>Every Monday the brand publishes one public “week of the week”. Anyone can adopt it in the app with one tap, and share what happened behind each door. The campaign is the product, played in public.</p></div>
+    <div class="plate"><h3>Who it is for</h3>
+      <div class="persona"><span class="who">The looped professional, 26–40</span><p>Same commute, same lunch, same scroll. Wants novelty that fits in 30 minutes.</p></div>
+      <div class="persona"><span class="who">The student in transition, 18–25</span><p>New city, few ties. Connect and Explore sparks are the hook; Commons is the social layer.</p></div>
+      <div class="persona"><span class="who">The newly free, 60+</span><p>Retired or kids moved out. Values Learn, Give and Happenings; needs big text and no jargon.</p></div></div>
+  </div>
+  <h3 style="font-size:1.8rem;margin:28px 0 14px">Four phases</h3>
+  <div class="phases">
+    <div class="phase"><span class="wk">Weeks −4 to 0</span><h4>Seed</h4><p>Invite Curioster followers into a closed beta. Run the original seven posts again with a “now it’s endless” reveal. Collect the first 50 diary stories (with consent) for launch content.</p></div>
+    <div class="phase"><span class="wk">Weeks 1–2</span><h4>Tease: the unmarked map</h4><p>Posters and stories show only a dotted, zig-zag route and the line “Get lost on purpose.” A week code on each poster unlocks a week in the app.</p></div>
+    <div class="phase"><span class="wk">Weeks 3–4</span><h4>Launch: 52 different weeks</h4><p>A public pledge: the brand lives 52 generated weeks and posts every door. Launch happening co-hosted with a local library or café, generated live on stage from the reels.</p></div>
+    <div class="phase"><span class="wk">Week 5 onward</span><h4>Sustain</h4><p>Four content pillars on a weekly rhythm: Monday week drop, Wednesday community door, Friday Science in a minute, Sunday diary story. Monthly Commons “week of the month”.</p></div>
+  </div>
+  <h3 style="font-size:1.8rem;margin:28px 0 14px">Channels and roles</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Channel</th><th>Role</th><th>Format</th><th>Cadence</th><th>Budget share</th></tr></thead>
+    <tbody>
+      <tr><td>Instagram (@curioster)</td><td>Heritage home, day cards</td><td>Day cards, carousels, story polls</td><td class="n">Daily</td><td class="n">25%</td></tr>
+      <tr><td>TikTok and Reels</td><td>Reach, people opening doors on camera</td><td>15–30 s “door opened” clips, creator weeks</td><td class="n">4× week</td><td class="n">30%</td></tr>
+      <tr><td>Newsletter</td><td>Retention, the Monday week drop</td><td>Week code, one science note, one diary story</td><td class="n">Weekly</td><td class="n">5%</td></tr>
+      <tr><td>Libraries, universities, community centres</td><td>Trust, older and student audiences</td><td>Printed posters with week codes, hosted happenings</td><td class="n">Monthly</td><td class="n">20%</td></tr>
+      <tr><td>Workplace wellbeing partners</td><td>Teams adopting a shared week</td><td>Team weeks in the Commons, Friday reflection kit</td><td class="n">Quarterly</td><td class="n">15%</td></tr>
+      <tr><td>Press and podcasts</td><td>Credibility of the science angle</td><td>“Randomness, with a method” story with a psychologist</td><td class="n">Launch +1 per quarter</td><td class="n">5%</td></tr>
+    </tbody></table></div>
+  <h3 style="font-size:1.8rem;margin:28px 0 14px">What we measure</h3>
+  <div class="kpi">
+    <div><b>Week 1</b><span>Activation: share of new users who mark at least one door done in their first week.</span></div>
+    <div><b>Doors</b><span>Average doors opened per active user per week (target is variety, not all seven).</span></div>
+    <div><b>Diary</b><span>Share of done doors that get a diary line. Our signal that it mattered.</span></div>
+    <div><b>Range</b><span>Average domains touched per user per month, out of ten.</span></div>
+    <div><b>Adopts</b><span>Commons weeks adopted per post. The campaign’s spread metric.</span></div>
+    <div><b>Week 8</b><span>Retention: still opening a door eight weeks after joining.</span></div>
+  </div>
+  <div class="grid2" style="margin-top:24px">
+    <div class="plate"><h3>Guardrails</h3><ul class="clean"><li>No streak shaming, no loss-framed notifications.</li><li>Diary stays private; stories are only used with explicit opt-in.</li><li>Sparks are free or near-free and safe by design; no dares involving risk.</li><li>Clear note that Get Random is a curiosity tool, not therapy.</li></ul></div>
+    <div class="plate"><h3>Launch post, ready to paste</h3><div class="copy">For years we posted one week at a time.
+Now there are endless ones.
+Get Random gives you seven small doors a week, picked with a bit of science and never the same twice.
+Open one today. Get lost on purpose.
+Have fun, be yourself and enjoy.</div></div>
+  </div>
+</section>
+
+</main>
+<footer><div class="wrap">Get Random brand book v1.0 · a Curioster project · Typefaces: Barlow Condensed, Atkinson Hyperlegible and IBM Plex Mono (SIL Open Font License).</div></footer>

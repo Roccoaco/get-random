@@ -1,0 +1,43 @@
+<title>Get Random</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;1,500&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/*@@CSS@@*/
+</style>
+/*@@SYMBOLS@@*/
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#compass" data-go="compass" aria-label="Get Random">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="34" cy="30" r="20" fill="none" stroke="#2F4356" stroke-width="6"/>
+        <path d="M19.5 44.5L9 55" stroke="#2F4356" stroke-width="7" stroke-linecap="round"/>
+        <g fill="#2F4356"><circle cx="34" cy="16.5" r="1.7"/><circle cx="44.6" cy="21.6" r="1.7"/><circle cx="47.2" cy="33" r="1.7"/><circle cx="39.9" cy="42.2" r="1.7"/><circle cx="28.1" cy="42.2" r="1.7"/><circle cx="20.8" cy="33" r="1.7"/><circle cx="23.4" cy="21.6" r="1.7"/></g>
+        <path d="M30 35.5L36.5 28.5 33 25.5 41.5 18" fill="none" stroke="#A54E2E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="28" cy="38" r="3.4" fill="#A54E2E"/>
+      </svg>
+      <span class="wordmark">Get random!</span>
+    </a>
+    <span class="status" id="status" role="status"><i></i><span id="statusText"></span></span>
+    <div class="lang" id="lang">
+      <button class="lang-btn" id="langbtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="langlist"><svg class="globe" aria-hidden="true"><use href="#i-globe"/></svg><span class="code">EN</span><span class="name">English</span><svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <div class="lang-pop"><p class="lang-head" id="langhead"><svg aria-hidden="true"><use href="#i-globe"/></svg><span>Language</span></p><ul class="lang-list" id="langlist" role="listbox" tabindex="-1" aria-label="Language"></ul></div>
+    </div>
+    <div class="ts" role="group" id="tsgroup" aria-label="Text size">
+      <button data-act="ts" data-v="1" aria-pressed="true">A</button>
+      <button data-act="ts" data-v="2" aria-pressed="false" style="font-size:1.1em">A</button>
+      <button data-act="ts" data-v="3" aria-pressed="false" style="font-size:1.25em">A</button>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Sections"><div class="wrap"><ul id="navlist"></ul></div></nav>
+</header>
+<main id="main" tabindex="-1"></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<script>
+/*@@LANGS@@*/
+</script>
+<script>
+/*@@ENGINE@@*/
+</script>
